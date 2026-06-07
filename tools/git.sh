@@ -1,175 +1,428 @@
-git init            # initiates git in the current directory
-git remote add origin https://github.com/repo_name.git        # add remote reposiory
-git clone <address> # creates a git repo from given address (get the address from your git-server)
-git clone <address> -b <branch_name> <path/to/directory>  # clones a git repo from the address into the given directory and checkout's the given branch
-git clone <address> -b <branch_name> --single-branch  # Clones a single branch
+##############################################################################
+# GIT — MODERN CHEATSHEET (git 2.40+)
+# Includes modern alternatives: git switch, git restore, git worktree
+##############################################################################
 
-git add <file_name>   # adds(stages) file.txt to the git
-git add *          # adds(stages) all new modifications, deletions, creations to the git
-git reset file.txt # Removes file.txt from the stage
-git reset --hard   # Throws away all your uncommitted changes, hard reset files to HEAD
-git reset --soft <commit_id> # moves the head pointer
-git reset --mixed <commit_id> # moves the head pointer and then copies the files from the commit it is now pointing to the staging area,
-# the default when no argument is provided
-git reset -hard <commit_id> # moves the head pointer and then copies the files from the commit it is now pointing to the staging area 
-# and working directory thus, throw away all uncommitted changes
+##############################################################################
+# SETUP & CONFIG
+##############################################################################
 
-# git reset
-# 1. Move HEAD and current branch
-# 2. Reset the staging area
-# 3. Reset the working area
+git init                              # Initialize repo in current directory
+git init --bare repo.git              # Initialize bare repository
 
-# --soft = (1)
-# --mixed = (1) & (2) (default)
-# --hard = (1) & (2) & (3)
+git clone <url>                       # Clone remote repo
+git clone <url> -b <branch> <dir>     # Clone specific branch into directory
+git clone <url> --depth 1             # Shallow clone (no history)
+git clone <url> --recurse-submodules  # Clone with submodules
 
-git rm file.txt    # removes file.txt both from git and file system
-git rm --cached file.txt # only removes file.txt both from git index
-git status         # shows the modifications and stuff that are not staged yet
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+git config --global init.defaultBranch main     # Default branch name
+git config --global core.editor code --wait     # Set editor
+git config --global pull.rebase true            # Rebase on pull by default
+git config --global fetch.prune true            # Prune on fetch
+git config --global rebase.autoStash true       # Auto stash on rebase
+git config --global push.autoSetupRemote true   # Auto-setup remote branch
+git config --global --list                      # List all config
+git config --global --edit                      # Edit config in editor
+git config --global alias.st status             # Create alias: git st
 
-git branch                         # shows all the branches (current branch is shown with a star)
-git branch -a                     # shows all the branches local and remote
+# .gitignore — patterns to ignore
+#   node_modules/
+#   .env
+#   *.log
+#   !important.log
 
-git branch my-branch               # creates my-branch
-git branch -d my-branch            # deletes my-branch
-git checkout my-branch         	   # switches to my-branch
-git merge my-branch                # merges my-branch to current branch
-git push origin --delete my-branch # delete remote branch
-git branch -m <new-branch-name>    # rename the branch
-git checkout --orphan <branch_name> # checkout a branch with no commit history
-git branch -vv                     # list all branches and their upstreams, as well as last commit on branch
-git branch -a                      # List all local and remote branches
+##############################################################################
+# WORKING WITH CHANGES
+##############################################################################
 
-git cherry-pick <commit_id>                     # merge the specified commit
-git cherry-pick <commit_id_A>^..<commit_id_B>   # pick the entire range of commits where A is older than B ( the ^ is for including A as well )
+git status                            # Show working tree status
+git status -s                         # Short status
+git status -b                         # Short with branch info
 
-git remote                         # shows the remotes
-git remote -v                      # shows the remote for pull and push
-git remote add my-remote <address> # creates a remote (get the address from your git-server)
-git remote rm my-remote            # Remove a remote
+git add <file>                        # Stage file
+git add .                             # Stage all changes (current dir)
+git add -p                            # Interactive staging (hunk-by-hunk)
+git add -A                            # Stage all (including deletions)
 
-git log                      # shows the log of commits
-# git log by default uses less command so you can use these: f=next page, b=prev page, search=/<query>, n=next match, p=prev match, q=quit
-git log --no-pager    # shows the log of commits without less command
-git log --oneline            # shows the log of commits, each commit in a single line
+git restore <file>                    # Discard unstaged changes (modern)
+git restore --staged <file>           # Unstage (modern)
+git restore --source=HEAD~1 <file>   # Restore from a specific commit
 
-git log --oneline --graph --decorate    # shows the log of commits, each commit in a single line with graph 
-git log --since=<time>                    # shows the log of commits since given time
-git log -- <file_name>
-git log -p <file_name>       # change over time for a specific file
-git log <Branch1> ^<Branch2> # lists commit(s) in branch1 that are not in branch2
-git log -n <x>               # lists the last x commits
-git log -n <x> --oneline     # lists the last x commits, each commit in single line
-git grep --heading --line-number '<string/regex>' # Find lines matching the pattern in tracked files
-git log --grep='<string/regex>'                   # Search Commit log
+# Legacy alternatives (still work):
+# git checkout -- <file>              # Discard unstaged changes
+# git reset HEAD <file>               # Unstage
 
-git reflog                       # record when the tips of branches and other references were updated in the local repository.
-git ls-files                     # show information about files in the index and the working tree
+git rm <file>                         # Remove from repo + working tree
+git rm --cached <file>                # Remove from tracking only (keep file)
+git mv <old> <new>                    # Move/rename file
 
-git commit -m "msg"          # commit changes with a msg
-git commit -m "title" -m "description" # commit changes with a title and description
-git commit --amend           # combine staged changes with the previous commit, or edit the previous commit message without changing its snapshot
-git commit --amend --no-edit # amends a commit without changing its commit message
-git commit --amend --author='Author Name <email@address.com>'    # Amend the author of a commit
-git push my-remote my-branch # pushes the commits to the my-remote in my-branch (does not push the tags)
-git revert <commit-id>       # Undo a commit by creating a new commit
+git clean -n                          # Dry-run: what would be removed
+git clean -f                          # Remove untracked files
+git clean -fd                         # Remove untracked files + dirs
+git clean -fX                         # Remove only ignored files
+git clean -fx                         # Remove both ignored + non-ignored
 
-git show                    # shows one or more objects (blobs, trees, tags and commits).
-git diff                     # show changes between commits, commit and working tree
-git diff HEAD               #show changes between working directory vs last commit
-git diff --staged HEAD    #show changes between stage area vs last commit
+##############################################################################
+# COMMITTING
+##############################################################################
 
-git diff --color             # show colored diff
-git diff --staged            # Shows changes staged for commit
+git commit -m "feat: add user login"                # Commit with message
+git commit -m "Title" -m "Body"                     # Multi-line message
+git commit -a -m "msg"                              # Stage all tracked files + commit
+git commit --amend                                  # Edit last commit (message + content)
+git commit --amend --no-edit                        # Amend without changing message
+git commit --amend --author="Name <email>"          # Change author
+git commit --allow-empty -m "empty commit"          # Force empty commit
 
-git tag                           # shows all the tags
-git tag -a v1.0 -m "msg"          # creates an annotated tag
-git show v1.0                     # shows the description of version-1.0 tag
-git tag --delete v1.0             # deletes the tag in local directory
-git push --delete my-remote v1.0  # deletes the tag in my-remote (be carefore to not delete a branch)
-git push my-remote my-branch v1.0 # push v1.0 tag to my-remote in my-branch
-git fetch --tags                  # pulls the tags from remote
+# Commit message conventions (Conventional Commits):
+#   feat:     New feature
+#   fix:      Bug fix
+#   docs:     Documentation
+#   style:    Formatting
+#   refactor: Code restructure
+#   perf:     Performance
+#   test:     Tests
+#   chore:    Maintenance
+#   ci:       CI/CD changes
+#   BREAKING CHANGE: breaks API compatibility
 
-git pull my-remote my-branch   # pulls and tries to merge my-branch from my-remote to the current branch git pull = git fetch && get merge
+##############################################################################
+# BRANCHING (Modern: switch)
+##############################################################################
 
+git branch                            # List local branches (* = current)
+git branch -a                         # List all branches (local + remote)
+git branch -r                         # List remote branches
+git branch -vv                        # List with upstream + last commit
 
-git stash                            # stashes the staged and unstaged changes (git status will be clean after it)
-git stash -u                         # stash everything including new untracked files (but not .gitignore)
-git stash save "msg"                 # stash with a msg
-git stash list                       # list all stashes
-git stash pop                        # delete the recent stash and applies it
-git stash pop stash@{2}              # delete the {2} stash and applies it
-git stash show                       # shows the description of stash
-git stash apply                      # keep the stash and applies it to the git
-git stash branch my-branch stash@{1} # creates a branch from your stash
-git stash drop stash@{1}             # deletes the {1} stash
-git stash clear                      # clears all the stash
+git branch <name>                     # Create branch
+git branch -d <name>                  # Delete local branch (merged)
+git branch -D <name>                  # Delete local branch (force)
+git branch -m <old> <new>             # Rename branch
+git branch -m <new>                   # Rename current branch
 
-git rebase -i <commit_id>         # Rebase commits from a commit ID
-git rebase --abort                # Abort a running rebase
-git rebase --continue             # Continue rebasing after fixing all conflicts
+# git switch — modern alternative to git checkout for branches
+git switch <branch>                   # Switch to branch
+git switch -c <branch>                # Create and switch to branch
+git switch -                          # Switch to previous branch
 
-git clean -f                      # clean untracked files permanently
-git clean -f -d/git clean -fd     # To remove directories permanently
-git clean -f -X/git clean -fX    # To remove ignored files permanently
-git clean -f -x/git clean -fx     # To remove ignored and non-ignored files permanently
-git clean -d --dry-run            # shows what would be deleted
+# git restore — modern alternative for files (see above)
 
+# Legacy checkout (still works)
+# git checkout <branch>
+# git checkout -b <branch>
 
-git config --global --list                   # lists the git configuration for all repos
-git config --global --edit                   # opens an editor to edit the git config file
-git config --global alias.<handle> <command> # add git aliases to speed up workflow , eg.
-# if  handle is st and command is status then running git st would execute git status 
-git config --global core.editor <editor_name>      # config default editor
+git merge <branch>                    # Merge branch into current
+git merge --no-ff <branch>            # Merge with no fast-forward
+git merge --abort                     # Abort merge on conflict
+git merge --continue                  # Continue merge after resolving
 
+git rebase <branch>                   # Rebase current onto <branch>
+git rebase -i HEAD~3                  # Interactive rebase (last 3 commits)
+git rebase --abort                    # Abort rebase
+git rebase --continue                 # Continue after fixing conflicts
 
-git archive <branch_name> --format=zip --outpute=./<archive_name>.zip # create an archive of files from a named tree
+git cherry-pick <commit>              # Apply a specific commit to current branch
+git cherry-pick A^..B                 # Apply range of commits (A older than B)
 
+##############################################################################
+# STASHING
+##############################################################################
 
-.gitignore
-# is a file including names of stuff that you don"t want to be staged or tracked.
-# You usually keep your local files like database, media, etc here.
-# You can find good resources online about ignoring specific files in your project files.
-# .gitignore is also get ignored 
-.git
-# is a hidden directory in repo directory including git files. It is created after "git init".
+git stash push -m "WIP: feature"      # Stash with message (modern)
+git stash push -u -m "with untracked" # Include untracked files
+git stash                            # Quick stash (same as push without message)
+git stash -u                         # Stash including untracked
 
+git stash list                       # List all stashes
+git stash show -p stash@{0}          # Show diff of stash
+git stash pop                        # Apply and drop top stash
+git stash pop stash@{2}              # Apply and drop specific stash
+git stash apply                      # Apply top stash (keep stash)
+git stash apply stash@{1}            # Apply specific stash
+git stash drop stash@{1}             # Delete specific stash
+git stash clear                      # Delete all stashes
+git stash branch <name> stash@{1}    # Create branch from stash
 
-# Some useful notes:
+##############################################################################
+# REMOTES
+##############################################################################
 
-# Better Commit messages:
-#   Key to Effective Debugging
-#   For the commit message to help in debugging effectively, ensure that it is short and use an imperative 
-#   mood (spoken or written as if giving a command or instruction) when constructing them.
-#   Also use feature tense for commit messages.
-#   The first word in your commit message should be one of these:
-#   Add
-#   Create
-#   Refactor
-#   Fix
-#   Release
-#   Document
-#   Modify
-#   Update
-#   Remove
-#   Delete etc...
+git remote -v                         # Show remote URLs
+git remote add origin <url>           # Add remote
+git remote rename origin upstream     # Rename remote
+git remote remove origin              # Remove remote
+git remote set-url origin <url>       # Change remote URL
+git remote show origin                # Show remote info
 
-# About resetting:
-#   Use git revert instead of git reset in shared repositories
-#   git revert creates a new commit that introduces the opposite changes from the specified commit.
-#   Revert does not change history the original commit stays in the repository
+git fetch origin                      # Fetch remote branches (no merge)
+git fetch --prune origin              # Fetch + prune deleted remotes
+git fetch --tags                      # Fetch all tags
+git pull                              # Fetch + merge (or rebase with pull.rebase)
+git pull --rebase                     # Fetch + rebase
+git push origin main                  # Push to remote
+git push -u origin main               # Push + set upstream
+git push --tags                       # Push tags
+git push --all                        # Push all branches
+git push origin --delete <branch>     # Delete remote branch
+git push --force-with-lease           # Force push safely (prefer over --force)
+git push --force                      # Force push (use sparingly)
 
+##############################################################################
+# UNDOING / REWRITING HISTORY
+##############################################################################
 
-# Difference between ~ and ^ in git:
-#   > ^ or ^n
-#       >no args: == ^1: the first parent commit
-#       >n: the nth parent commit
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  SCOPE        │  COMMAND                                        ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║  Working tree │  git restore <file>                             ║
+# ║  Staging      │  git restore --staged <file>                    ║
+# ║  Local commit │  git commit --amend                             ║
+# ║  Local commits│  git reset --soft HEAD~1  (keep changes)        ║
+# ║               │  git reset --mixed HEAD~1  (unstage)            ║
+# ║               │  git reset --hard HEAD~1  (discard ALL)         ║
+# ║  Shared remt  │  git revert <commit>  (safe — creates new cmt)  ║
+# ╚══════════════════════════════════════════════════════════════════╝
 
-#   > ~ or ~n
-#       >no args: == ~1: the first commit back, following 1st parent
-#       >n: number of commits back, following only 1st parent
-#   note: ^ and ~ can be combined
+# git reset modes:
+#   --soft  = move HEAD only (keep working + staging)
+#   --mixed = move HEAD + reset staging (default)
+#   --hard  = move HEAD + reset staging + reset working (DANGEROUS)
 
-# Some tools to improve git skill by visualizing it:
-#   https://git-school.github.io/visualizing-git/
-#   https://learngitbranching.js.org/
+git revert <commit>                   # Undo commit via new commit (safe for shared branches)
+git revert --no-commit <commit>..HEAD # Revert range without auto-committing
+
+git reflog                            # Show reference log (recover lost commits)
+git reflog expire --expire=now --all  # Clean reflog
+
+# Recover lost commit:
+# git reflog
+# git cherry-pick <hash_from_reflog>
+
+##############################################################################
+# LOGGING & HISTORY
+##############################################################################
+
+git log                               # Full commit log
+git log --oneline                     # One line per commit
+git log --oneline --graph --decorate  # Graphical history tree
+git log --oneline --graph --all       # All branches graph
+git log -n 5                          # Last 5 commits
+git log --since="2 weeks ago"         # Commits since date
+git log --until="yesterday"           # Commits until date
+git log --author="name"               # Filter by author
+git log --grep="fix"                  # Search commit messages
+git log -p <file>                     # Show file change history
+git log --follow <file>               # Show history including renames
+git log --diff-filter=M -- <file>     # Only modified files
+git log --oneline --graph --all --decorate  # Full DAG
+
+git shortlog -sn                      # Contributor commit count
+git blame <file>                      # Show who last modified each line
+git blame -L 10,20 <file>             # Line range blame
+
+git show <commit>                     # Show commit details + diff
+git show HEAD                         # Show latest commit
+git show HEAD:path/to/file            # Show file content at that commit
+
+git diff                              # Unstaged changes
+git diff --staged                     # Staged changes (ready to commit)
+git diff HEAD                         # All changes (working + staged)
+git diff <branch1> <branch2>          # Diff between branches
+git diff --stat                       # Summary of changes
+git diff --word-diff                  # Word-level diff
+
+##############################################################################
+# GIT SWITCH / RESTORE (Modern alternatives)
+##############################################################################
+
+# git switch — for branches (replaces `git checkout` for branch ops)
+git switch main                       # Switch to branch
+git switch -c feature/login           # Create + switch
+git switch -                           # Switch to previous branch
+git switch --detach HEAD~3            # Detached HEAD
+
+# git restore — for files (replaces `git checkout` for file ops)
+git restore file.txt                  # Discard working tree changes
+git restore --staged file.txt         # Unstage file
+git restore --source=main file.txt    # Restore file from another branch
+git restore -p file.txt               # Interactive hunk restore
+
+##############################################################################
+# GIT WORKTREE (Work on multiple branches simultaneously)
+##############################################################################
+
+git worktree list                     # List all worktrees
+git worktree add ../project-feature feature/login  # New worktree for branch
+git worktree add -b hotfix ../hotfix main          # Create branch + worktree
+git worktree remove ../project-feature             # Remove worktree
+git worktree prune                    # Clean up stale worktree references
+
+# Use case: work on a hotfix without stashing current work
+#   git worktree add ../hotfix -b hotfix/urgent main
+#   cd ../hotfix
+#   # fix, commit, push
+#   cd ../main-project
+#   git worktree remove ../hotfix
+
+##############################################################################
+# GIT SPARSE CHECKOUT (Partial checkout of large repos)
+##############################################################################
+
+git sparse-checkout init --cone       # Initialize sparse checkout (cone mode)
+git sparse-checkout set src/ docs/    # Check out only src/ and docs/
+git sparse-checkout add tests/       # Add more directories
+git sparse-checkout list              # List sparse patterns
+git sparse-checkout disable           # Disable sparse checkout
+
+# Good for monorepos — only checkout the directories you need
+
+##############################################################################
+# GIT BISECT (Binary search for bug-introducing commit)
+##############################################################################
+
+git bisect start                      # Start bisect session
+git bisect bad                        # Current commit is bad
+git bisect good v1.0                  # Mark known-good tag/commit
+# Git will checkout a midpoint commit
+# Test the commit, then:
+git bisect good                       # If this commit is good
+# OR
+git bisect bad                        # If this commit is bad
+# Repeat until commit is found
+git bisect reset                      # End bisect (return to original HEAD)
+
+# Automated bisect:
+# git bisect start HEAD v1.0
+# git bisect run npm test             # Auto-run test script
+# git bisect reset
+
+##############################################################################
+# TAGS
+##############################################################################
+
+git tag                               # List all tags
+git tag -a v1.0.0 -m "Release v1.0"  # Annotated tag (recommended)
+git tag v1.0.0-lw                     # Lightweight tag
+git tag -d v1.0.0                     # Delete local tag
+git push origin v1.0.0                # Push specific tag
+git push --tags                       # Push all tags
+git push origin --delete v1.0.0       # Delete remote tag
+git fetch --tags                      # Fetch all tags from remote
+git checkout v1.0.0                   # Checkout tag (detached HEAD)
+git describe --tags                   # Show nearest tag
+
+# Semantic versioning tags:
+# vMAJOR.MINOR.PATCH
+# v1.0.0, v1.0.1, v1.1.0, v2.0.0
+
+##############################################################################
+# SIGNED COMMITS (GPG/SSH)
+##############################################################################
+
+# GPG signing
+git config --global user.signingkey <key-id>     # Set signing key
+git config --global commit.gpgsign true          # Sign all commits
+git commit -S -m "signed commit"                 # Sign single commit
+git log --show-signature                          # Verify signatures
+
+# SSH signing (git 2.34+)
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+git log --show-signature
+
+# Tag signing
+git tag -s v1.0.0 -m "Signed release v1.0"      # Sign tag
+git tag -v v1.0.0                                 # Verify tag signature
+
+##############################################################################
+# GITHUB CLI (gh) — Modern GitHub workflows
+##############################################################################
+
+# Install: https://cli.github.com/
+# Authenticate: gh auth login
+
+gh repo create <name> --public|--private  # Create repo on GitHub
+gh repo fork <repo>                       # Fork repo
+gh repo clone <owner>/<repo>              # Clone + set remotes
+
+gh pr create --title "Feature" --body "Description"  # Create PR
+gh pr create --fill                        # Create PR from commit messages
+gh pr list                                 # List PRs
+gh pr list --state merged                  # List merged PRs
+gh pr view <number>                        # View PR details
+gh pr checkout <number>                    # Checkout PR locally
+gh pr merge <number>                       # Merge PR
+gh pr review --approve <number>            # Approve PR
+
+gh issue list                              # List issues
+gh issue create --title "Bug" --body "..." # Create issue
+gh issue view <number>                     # View issue
+
+gh run list                                # List workflow runs
+gh run watch <run-id>                      # Watch workflow run
+gh run view <run-id>                       # View run details
+
+gh alias set prc 'pr create --fill'        # Create alias
+gh browse                                  # Open repo in browser
+gh repo view --web                         # Open repo in browser
+
+##############################################################################
+# SUBMODULES
+##############################################################################
+
+git submodule add <url> <path>            # Add submodule
+git submodule update --init --recursive   # Clone all submodules
+git submodule update --remote             # Update to latest commit
+git submodule foreach git pull origin main # Run command in each submodule
+git clone --recurse-submodules <url>      # Clone repo + submodules
+
+##############################################################################
+# ADVANCED
+##############################################################################
+
+git archive --format=zip HEAD > archive.zip       # Create archive
+git archive --format=tar.gz --output=test.tar.gz --prefix=myapp/ HEAD
+
+git grep "pattern"                      # Search working tree
+git grep --cached "pattern"             # Search staged files
+git grep "function" $(git rev-list --all)  # Search entire history
+
+git fsck                                # Check repository integrity
+git gc                                  # Garbage collect
+git gc --aggressive                     # Aggressive optimization
+git count-objects -vH                  # Repository size stats
+
+git clean -fd --dry-run                 # Preview what git clean removes
+
+# Fix divergent branches
+git fetch origin
+git reset --hard origin/main            # Overwrite local with remote (DANGEROUS)
+
+##############################################################################
+# GIT WORKFLOW REFERENCE
+##############################################################################
+
+# Trunk-based (modern, preferred):
+#   main ← feature branches (short-lived)
+#   git switch -c feat/login
+#   # work, commit
+#   git switch main
+#   git pull --rebase
+#   git merge feat/login
+#   git push
+
+# GitHub Flow:
+#   main ← feature branches → PR → merge
+#   git switch -c feat/add-login
+#   # work, commit
+#   git push -u origin feat/add-login
+#   # Open PR on GitHub
+#   gh pr create --fill
+
+# Git Flow (legacy, complex):
+#   main ← develop ← feature/hotfix/release
+#   Not recommended for modern CI/CD

@@ -1,91 +1,374 @@
 ##############################################################################
-# DOCKER
+# DOCKER — MODERN CHEATSHEET (Docker Engine 24+ / Compose V2)
+# All commands use the modern `docker compose` (v2) subcommand.
 ##############################################################################
 
-docker init                                 # Creates Docker-related starter files 
-docker build -t friendlyname .              # Create image using this directory's Dockerfile
-docker run -p 4000:80 friendlyname          # Run "friendlyname" mapping port 4000 to 80
-docker run -d -p 4000:80 friendlyname       # Same thing, but in detached mode
-docker exec -it [container-id] bash         # Enter a running container
-docker ps                                   # See a list of all running containers
-docker stop <hash>                          # Gracefully stop the specified container
-docker ps -a                                # See a list of all containers, even the ones not running
-docker kill <hash>                          # Force shutdown of the specified container
-docker rm <hash>                            # Remove the specified container from this machine
-docker rm -f <hash>                         # Remove force specified container from this machine
-docker rm $(docker ps -a -q)                # Remove all containers from this machine
-docker images -a                            # Show all images on this machine
-docker rmi <imagename>                      # Remove the specified image from this machine
-docker rmi $(docker images -q)              # Remove all images from this machine
-docker logs <container-id> -f               # Live tail a container's logs
-docker login                                # Log in this CLI session using your Docker credentials
-docker tag <image> username/repository:tag  # Tag <image> for upload to registry
-docker push username/repository:tag         # Upload tagged image to registry
-docker run username/repository:tag          # Run image from a registry
-docker system prune                         # Remove all unused containers, networks, images (both dangling and unreferenced), and optionally, volumes. (Docker 17.06.1-ce and superior)
-docker system prune -a                      # Remove all unused containers, networks, images not just dangling ones (Docker 17.06.1-ce and superior)
-docker volume prune                         # Remove all unused local volumes
-docker network prune                        # Remove all unused networks
-
-
 ##############################################################################
-# DOCKER COMPOSE
+# INSTALLATION & SETUP
 ##############################################################################
 
+docker version                       # Show Docker version info
+docker info                          # System-wide info
+docker system df                     # Disk usage
 
-docker-compose up                               # Create and start containers
-docker-compose up -d                            # Create and start containers in detached mode
-docker-compose down                             # Stop and remove containers, networks, images, and volumes
-docker-compose logs                             # View output from containers
-docker-compose restart                          # Restart all service
-docker-compose pull                             # Pull all image service 
-docker-compose build                            # Build all image service
-docker-compose config                           # Validate and view the Compose file
-docker-compose scale <service_name>=<replica>   # Scale special service(s)
-docker-compose top                              # Display the running processes
-docker-compose run -rm -p 2022:22 web bash      # Start web service and runs bash as its command, remove old container.
+# BuildKit — enabled by default in Docker 23+, but verify:
+docker buildx version                # BuildKit builder version
+docker buildx ls                     # List builders
+docker buildx create --name mybuilder --use   # Create custom builder
+docker buildx inspect --bootstrap    # Initialize builder
 
-##############################################################################
-# DOCKER SERVICES 
-##############################################################################
-
-
-docker service create <options> <image> <command>   # Create new service
-docker service inspect --pretty <service_name>      # Display detailed information Service(s)
-docker service ls                                   # List Services
-docker service ps                                   # List the tasks of Services
-docker service scale <service_name>=<replica>       # Scale special service(s)
-docker service update <options> <service_name>      # Update Service options
-
+# Environment variables
+# DOCKER_BUILDKIT=1          # Force BuildKit (legacy opt-in)
+# COMPOSE_FILE=docker-compose.yml
+# DOCKER_HOST=tcp://...
+# DOCKER_CONTEXT=mycontext
 
 ##############################################################################
-# DOCKER STACK 
+# IMAGES
 ##############################################################################
 
+docker images -a                     # List all images
+docker pull ubuntu:24.04             # Pull image from registry
+docker push user/repo:tag            # Push image to registry
+docker rmi <image>                   # Remove image
+docker rmi $(docker images -q)       # Remove all images
+docker rmi $(docker images -f "dangling=true" -q)  # Remove dangling images
 
-docker stack ls                                 # List all running applications on this Docker host
-docker stack deploy -c <composefile> <appname>  # Run the specified Compose file
-docker stack services <appname>                 # List the services associated with an app
-docker stack ps <appname>                       # List the running containers associated with an app
-docker stack rm <appname>                       # Tear down an application
+docker tag <image> user/repo:tag     # Tag image for registry
+docker save -o image.tar <image>     # Save image to tarball
+docker load -i image.tar             # Load image from tarball
 
+docker image prune                   # Remove unused images
+docker image prune -a                # Remove all unused images (not just dangling)
+docker system prune                  # Clean up containers, networks, images
+docker system prune -a --volumes     # Full cleanup
+
+# Image history & inspection
+docker history <image>               # Show image layers
+docker inspect <image>               # Detailed JSON metadata
+docker image ls --filter "label=maintainer=..."  # Filter by label
 
 ##############################################################################
-# DOCKER MACHINE
+# BUILDING (Dockerfile & BuildKit)
 ##############################################################################
 
+docker build -t myapp:latest .        # Build image from Dockerfile (cwd)
+docker build -t myapp:latest -f Dockerfile.prod .   # Custom Dockerfile
+docker build --no-cache -t myapp .    # Build without cache
+docker build --target builder -t myapp:build .  # Build specific stage
 
-docker-machine create --driver virtualbox myvm1                           # Create a VM (Mac, Win7, Linux)
-docker-machine create -d hyperv --hyperv-virtual-switch "myswitch" myvm1  # Win10
-docker-machine env myvm1                                                  # View basic information about your node
-docker-machine ssh myvm1 "docker node ls"                                 # List the nodes in your swarm
-docker-machine ssh myvm1 "docker node inspect <node ID>"                  # Inspect a node
-docker-machine ssh myvm1 "docker swarm join-token -q worker"              # View join token
-docker-machine ssh myvm1                                                  # Open an SSH session with the VM; type "exit" to end
-docker-machine ssh myvm2 "docker swarm leave"                             # Make the worker leave the swarm
-docker-machine ssh myvm1 "docker swarm leave -f"                          # Make master leave, kill swarm
-docker-machine start myvm1                                                # Start a VM that is currently not running
-docker-machine stop $(docker-machine ls -q)                               # Stop all running VMs
-docker-machine rm $(docker-machine ls -q)                                 # Delete all VMs and their disk images
-docker-machine scp docker-compose.yml myvm1:~                             # Copy file to node's home dir
-docker-machine ssh myvm1 "docker stack deploy -c <file> <app>"            # Deploy an app
+# Multi-stage build: use with --target
+# Dockerfile:
+#   FROM node:20-alpine AS builder
+#   COPY . .
+#   RUN npm ci && npm run build
+#
+#   FROM nginx:alpine
+#   COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Build arguments
+docker build --build-arg VERSION=1.2.3 -t myapp .
+# Dockerfile: ARG VERSION
+
+# BuildKit-specific features
+docker build --secret id=mysecret,src=./secret.txt -t myapp .
+# Dockerfile: RUN --mount=type=secret,id=mysecret cat /run/secrets/mysecret
+
+docker build --ssh default -t myapp .
+# Dockerfile: RUN --mount=type=ssh git clone git@github.com:org/repo.git
+
+# Cache mounts (speeds up package installs)
+# RUN --mount=type=cache,target=/root/.npm npm ci
+
+# Export/import with BuildKit
+docker buildx build --platform linux/amd64,linux/arm64 -t user/app --push .
+# Cross-platform build & push (requires builders with multi-arch support)
+
+##############################################################################
+# CONTAINERS (Run / Exec / Logs)
+##############################################################################
+
+docker run -d --name myapp -p 8080:80 myimage:tag    # Detached, port mapping
+docker run -it --rm ubuntu:24.04 bash                  # Interactive, auto-remove
+docker run --env-file .env myapp                        # Env file
+docker run -e DB_HOST=localhost -e DB_PORT=5432 myapp  # Env variables
+docker run -v /host/path:/container/path myapp         # Bind mount
+docker run -v myvolume:/data myapp                     # Named volume
+docker run --network my-network myapp                  # Attach network
+docker run --restart unless-stopped myapp              # Restart policy
+docker run --pull always myapp                         # Always pull latest
+docker run --init myapp                                # Init process (zombie reaping)
+docker run --read-only --tmpfs /tmp myapp              # Read-only root fs
+
+docker ps                                # Running containers
+docker ps -a                             # All containers
+docker ps -q                             # Quiet (IDs only)
+docker ps --filter "name=myapp"          # Filter
+docker ps --format "table {{.Names}}\t{{.Status}}"  # Custom format
+
+docker stop <container>                  # Graceful stop (SIGTERM)
+docker kill <container>                  # Force kill (SIGKILL)
+docker restart <container>               # Restart
+docker pause <container>                 # Pause all processes
+docker unpause <container>
+
+docker rm <container>                    # Remove container
+docker rm -f <container>                 # Force remove (running)
+docker rm $(docker ps -a -q)             # Remove all containers
+docker container prune                   # Remove stopped containers
+
+docker exec -it <container> bash         # Interactive shell
+docker exec <container> ls -la           # Run command in container
+docker cp <container>:/path ./local      # Copy from container
+docker cp ./local <container>:/path      # Copy to container
+
+# Logs
+docker logs <container>                  # Show logs
+docker logs -f <container>               # Follow (tail -f)
+docker logs --tail 100 <container>       # Last N lines
+docker logs --since 5m <container>       # Since time
+docker logs --until 2m <container>       # Until time
+docker logs -t <container>               # With timestamps
+
+docker stats                              # Live container resource usage
+docker stats --no-stream <container>      # One-shot stats
+docker top <container>                    # Processes in container
+docker inspect <container>                # Detailed JSON metadata
+docker diff <container>                   # Changed files
+
+##############################################################################
+# DOCKER COMPOSE V2 (modern `docker compose` — no hyphen)
+##############################################################################
+
+docker compose up                        # Create and start containers
+docker compose up -d                     # Detached mode
+docker compose down                      # Stop and remove containers, networks
+docker compose down -v                   # Also remove volumes
+docker compose down --rmi all            # Also remove images
+docker compose restart                   # Restart all services
+docker compose ps                        # List containers for this compose
+docker compose ls                        # List running compose projects
+
+docker compose logs -f                   # Follow logs from all services
+docker compose logs <service>            # Logs for specific service
+docker compose exec <service> bash       # Exec into service container
+docker compose run --rm <service> cmd    # Run one-off command
+
+docker compose build                     # Build or rebuild all services
+docker compose build --no-cache          # Build without cache
+docker compose build <service>           # Build specific service
+docker compose pull                      # Pull all service images
+docker compose push                      # Push all service images
+
+docker compose config                    # Validate and view compose file
+docker compose config --services         # List service names
+docker compose config --volumes          # List volume names
+docker compose images                    # List images used by services
+docker compose top                       # Show running processes
+docker compose version                   # Show Compose version
+
+# Scaling
+docker compose up -d --scale web=3       # Scale web service to 3 replicas
+
+# Watch mode (Docker Compose 2.23+)
+docker compose watch                     # Auto-rebuild/reload on file changes
+
+docker-compose.yml example:
+# version: '3'  # No longer needed — Compose V2 infers
+# services:
+#   web:
+#     build: .
+#     ports:
+#       - "8080:80"
+#     volumes:
+#       - .:/app
+#     environment:
+#       - NODE_ENV=development
+#     depends_on:
+#       - db
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost/health"]
+#       interval: 30s
+#       timeout: 5s
+#       retries: 3
+#       start_period: 10s
+#
+#   db:
+#     image: postgres:16-alpine
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+#     environment:
+#       POSTGRES_PASSWORD_FILE: /run/secrets/db_pass
+#     secrets:
+#       - db_pass
+#
+# volumes:
+#   pgdata:
+#
+# secrets:
+#   db_pass:
+#     file: ./secrets/db_password.txt
+
+# Include mode (Compose 2.20+)
+# include:
+#   - path: ./base.yml
+#   - path: ./override.yml
+
+##############################################################################
+# VOLUMES & NETWORKS
+##############################################################################
+
+docker volume ls                        # List volumes
+docker volume create myvolume           # Create volume
+docker volume inspect myvolume          # Volume details
+docker volume prune                     # Remove unused volumes
+docker volume rm myvolume               # Remove specific volume
+
+docker network ls                       # List networks
+docker network create mynetwork         # Create network
+docker network create --driver bridge mynetwork
+docker network create --driver overlay mynetwork  # Swarm overlay
+docker network inspect mynetwork        # Network details
+docker network connect mynetwork <container>     # Connect container
+docker network disconnect mynetwork <container>  # Disconnect container
+docker network prune                    # Remove unused networks
+
+##############################################################################
+# HEALTHCHECKS
+##############################################################################
+
+# In Dockerfile:
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#   CMD curl -f http://localhost/health || exit 1
+
+# In docker compose:
+# healthcheck:
+#   test: ["CMD-SHELL", "pg_isready -U postgres"]
+#   interval: 10s
+#   timeout: 5s
+#   retries: 5
+#   start_period: 30s
+
+docker inspect --format='{{json .State.Health}}' <container>  # Check health
+
+##############################################################################
+# DOCKER SCOUT (Supply Chain — Docker 24+)
+##############################################################################
+
+docker scout quickview <image>          # Quick vulnerability overview
+docker scout cves <image>               # Full CVE list
+docker scout compare <image1> <image2>  # Compare two images
+docker scout recommendations <image>    # Base image recommendations
+docker scout sbom <image>               # Software Bill of Materials
+docker scout cache                      # Manage cache
+
+# Enable in CI:
+# docker scout cves --only-severity critical,high --exit-code <image>
+
+##############################################################################
+# REGISTRY & AUTH
+##############################################################################
+
+docker login                            # Login to Docker Hub
+docker login myregistry.com             # Login to private registry
+docker logout                           # Logout
+
+# Docker Hub rate limits — use Docker Scout or mirror registry
+
+##############################################################################
+# DOCKERFILE BEST PRACTICES
+##############################################################################
+
+# .dockerignore (always use one):
+#   node_modules/
+#   .git/
+#   .env
+#   *.md
+#   Dockerfile
+#   .dockerignore
+
+# Multi-stage build pattern:
+#   # Stage 1: Build
+#   FROM node:20-alpine AS builder
+#   WORKDIR /app
+#   COPY package*.json ./
+#   RUN npm ci --only=production
+#   COPY . .
+#   RUN npm run build
+#
+#   # Stage 2: Runtime
+#   FROM node:20-alpine
+#   RUN addgroup -S app && adduser -S app -G app
+#   WORKDIR /app
+#   COPY --from=builder --chown=app:app /app/dist ./dist
+#   COPY --from=builder /app/package.json ./
+#   COPY --from=builder /app/node_modules ./node_modules
+#   USER app
+#   EXPOSE 3000
+#   HEALTHCHECK --interval=30s --timeout=3s CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+#   CMD ["node", "dist/server.js"]
+
+# Dockerfile tips:
+#   - Order layers from least to most frequently changing
+#   - Use specific tags (node:20-alpine NOT node:latest)
+#   - Prefer COPY over ADD (unless extracting tar.gz or using URLs)
+#   - Combine RUN commands to reduce layers
+#   - Set WORKDIR, not cd
+#   - Use LABEL for metadata
+#   - Use ARG for build-time, ENV for runtime
+#   - EXPOSE is documentation only
+#   - Use --no-cache for apt/apk to reduce image size
+
+##############################################################################
+# DOCKER SWARM (Orchestration)
+##############################################################################
+
+docker swarm init                       # Initialize swarm
+docker swarm join --token <token> <ip>:2377  # Join as worker
+docker swarm leave                      # Leave swarm
+docker swarm leave --force              # Force leave (manager)
+docker node ls                          # List nodes
+docker node inspect <node>              # Inspect node
+docker node update --availability drain <node>  # Drain node
+
+docker service create --name web -p 80:80 --replicas 3 nginx  # Create service
+docker service ls                                               # List services
+docker service ps <service>                                     # List service tasks
+docker service scale web=5                                       # Scale service
+docker service update --image nginx:alpine web                  # Update service
+docker service logs <service>                                    # Service logs
+docker service rm <service>                                      # Remove service
+
+docker stack deploy -c docker-compose.yml mystack    # Deploy stack
+docker stack ls                                        # List stacks
+docker stack services mystack                          # Stack services
+docker stack ps mystack                                # Stack tasks
+docker stack rm mystack                                # Remove stack
+
+##############################################################################
+# DOCKER BUILDX (Multi-platform builds)
+##############################################################################
+
+docker buildx create --name multiarch --driver docker-container --use
+docker buildx inspect --bootstrap
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t user/app .
+docker buildx build --platform linux/amd64,linux/arm64 -t user/app --push .
+docker buildx rm multiarch
+
+# Bake (HCL-based build definition)
+# docker buildx bake -f docker-bake.hcl
+
+##############################################################################
+# TROUBLESHOOTING & DEBUG
+##############################################################################
+
+docker logs <container> -f              # Tail logs
+docker inspect <container>              # Full container details
+docker exec -it <container> sh          # Shell into running container
+docker stats <container>                # Resource usage
+docker events                           # Real-time events from daemon
+docker system events --since 1h         # Events from last hour
+docker system prune                     # Full cleanup
+docker system df                        # Disk usage
+docker container ls --filter "status=exited"  # Find exited containers
+docker restart $(docker ps -q)          # Restart all running containers

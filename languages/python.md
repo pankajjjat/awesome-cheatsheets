@@ -1,382 +1,588 @@
 # Python
 
-* Python is an interpreted, high-level and general-purpose, dynamically typed programming language
+* Python is an interpreted, high-level, general-purpose, dynamically typed programming language.
+* Object-oriented, modular, and scripting language. Everything is an Object.
+* Indentation-based (PEP 8), no braces.
+* Supported on all major platforms. Runs on CPython (default), PyPy, Jython, etc.
 
-* It is also Object oriented, modular oriented and a scripting language.
+---
 
-* In Python, everything is considered as an Object.
+## Running Python
 
-* A python file has an extension of .py
+```bash
+python3 script.py              # Run a script
+python3 -m venv .venv          # Create virtual environment (built-in)
+python3 -m pip install <pkg>   # Install package (classic)
+uv pip install <pkg>           # Install with uv (modern, 10-100x faster)
+uv add <pkg>                   # uv: add dependency & sync
+uv sync                        # uv: sync from pyproject.toml
+python3 -c "print('hi')"       # Run inline code
+python3 -i script.py           # Run script then enter interactive REPL
+python3 -m http.server 8000    # Simple HTTP server
+```
 
-* Python follows Indentation to separate code blocks instead of flower brackets({}).
+## Virtual Environments (Modern)
 
-* We can run a python file by the following command in cmd(Windows) or shell(mac/linux).
+```bash
+# Built-in (Python 3.3+)
+python3 -m venv .venv
+source .venv/bin/activate      # Linux/macOS
+.venv\Scripts\activate          # Windows
 
-    `$ python <filename.py>` or `$ python3 <filename.py>`
+# uv (modern, fast)
+uv venv                        # Create .venv
+uv venv --python 3.12         # Specific version
+source .venv/bin/activate
+uv sync                        # Install deps from pyproject.toml
+```
 
-#### By default, python doesn't require any imports to run a python file.
+## Package Management
 
-## Create and execute a program
+```bash
+pip install -U pip             # Upgrade pip
+pip install <pkg>              # Install
+pip install -r requirements.txt
+pip freeze > requirements.txt
+pip list --outdated
+pip uninstall <pkg>
 
-1. Open up a terminal/cmd
-1. Create the program: nano/cat > nameProgram.py
-1. Write the program and save it
-1. python nameProgram.py
+# Modern: pip-tools
+pip-compile pyproject.toml     # Generate requirements.txt
+pip-sync                       # Sync env to requirements.txt
 
-<br>
+# Modern: uv (replaces pip/pip-compile/pip-sync/venv)
+uv add requests               # Add to pyproject.toml & install
+uv add --dev pytest           # Dev dependency
+uv remove requests
+uv pip install flask          # Works like pip too
+```
 
-### Basic Datatypes
+## Basic Datatypes
 
 | Data Type | Description |
-| --------- | ----------- |
-| int | Integer values [0, 1, -2, 3] |
-| float | Floating point values [0.1, 4.532, -5.092] |
-| char | Characters [a, b, @, !, `] |
-| str | Strings [abc, AbC, A@B, sd!, `asa] |
-| bool | Boolean Values [True, False] |
-| complex | Complex numbers [2+3j, 4-1j] |
+|-----------|------------|
+| `int` | Integer [0, 1, -2, 3_000_000] |
+| `float` | Floating point [0.1, 4.532, -5.092] |
+| `str` | Strings ['abc', "def", f"val={x}"] |
+| `bool` | Boolean [True, False] |
+| `complex` | Complex numbers [2+3j, 4-1j] |
+| `bytes` | Byte literals [b"hello"] |
+| `bytearray` | Mutable bytes |
+| `None` | Null value (`NoneType`) |
 
-<br>
+New in 3.10+: `str.removeprefix()`, `str.removesuffix()`, `int.bit_count()`
 
-## Keywords
-<br>
+```python
+s = "HelloWorld"
+s.removeprefix("Hello")  # "World"  (new in 3.9)
+s.removesuffix("World")  # "Hello"  (new in 3.9)
+```
 
-- As of python3.8 there are 35 keywords
+## Keywords (35+, Python 3.10+ added `match`, `case`, `_` soft keyword)
 
-| Keyword | Description  | Category |
-|---------- | ---------- | --------- |
-| True      | Boolean value for not False or 1 | Value Keyword|
-| False     | Boolean Value for not True or 0 | Value Keyword |
-| None      | No Value | Value keyword |
-| and       | returns true if both (oprand) are true (other language && ) | Operator keyword |
-| or        | returns true of either operands is true (other language || ) | Operator keyword |
-| in        | returns true if word is in iterator | Operator keyword |
-| is        | returns true if id of variables are same | Operator keyword |
-| not       | returns opposite Boolean value | Operator Keyword |
-| if | get into block if expression is true | conditional |
-| elif | for more than 1 if checks | conditional |
-| else | this block will be executed if condition is false | conditional |
-| for | used for looping | iteration |
-| while | used for looping | iteration |
-| break | get out of loop | iteration |
-| continue | skip for specific condition | iteration |
-| def | make user defined function | structure |
-| class | make user defined classes | structure |
-| lambda | make anonymous function | structure |
-| with | execute code within context manager's scope | structure |
-| as | alias for something | structure |
-| pass | used for making empty structures(declaration) | structure |
-| return | get value(s) from function, get out of function | returning keyword |
-| yield | yields values instead of returning (are called generators) | returning keyword |
-| import | import libraries/modules/packages | import |
-| from | import specific function/classes from modules/packages | import |
-| try | this block will be tried to get executed | exception handling |
-| except | is any exception/error has occurred it'll be executed | exception handling |
-| finally | It'll be executed no matter exception occurs or not | exception handling |
-| raise | throws any specific error/exception | exception handling |
-| assert | throws an AssertionError if condition is false | exception handling |
-| async | used to define asynchronous functions/co-routines | asynchronous programming |
-| await | used to specify a point when control is taken back | asynchronous programming |
-| del | deletes/unsets any user defined data |  variable handling |
-| global | used to access variables defined outside of function | variable handling |
-| nonlocal | modify variables from different scopes | variable handling |
-<br>
+| Keyword | Category |
+|---------|----------|
+| `True` `False` `None` | Value keywords |
+| `and` `or` `not` `in` `is` | Operator keywords |
+| `if` `elif` `else` | Conditional |
+| `for` `while` `break` `continue` | Iteration |
+| `def` `class` `lambda` | Structure |
+| `with` `as` | Context managers |
+| `pass` | No-op placeholder |
+| `return` `yield` | Returning |
+| `import` `from` | Import system |
+| `try` `except` `finally` `raise` `assert` | Exception handling |
+| `async` `await` | Async programming |
+| `del` `global` `nonlocal` | Variable handling |
+| `match` `case` | Pattern matching (3.10+) |
 
-## Operators
+## Type Hints (Modern Python)
 
-<br>
+```python
+from collections.abc import Sequence, Mapping, Callable
+from typing import TypeVar, Generic, overload, assert_never
 
-| Operator | Description |
-|-|-|
-|  ( )	|  grouping parenthesis, function call, tuple declaration |
-|  [ ]	|  array indexing, also declaring lists etc.|
-|  !	|    relational not, complement, ! a  yields true or false |
-|  ~   | 	bitwise not, ones complement, ~a |
-| \-   |	unary minus, - a |
-|  \+   | 	unary plus,  + a |
-|  \*   |	multiply, a * b |
-|  /   	| divide, a / b |
-|  %    |	modulo, a % b |
-|  \+   | 	add, a + b |
-| \-   | 	subtract, a - b |
-| <<   | shift left,  left operand is shifted left by right operand bits (multiply by 2) |
-| \>>   |	shift right, left operand is shifted right by right operand bits (divide by 2) |
- | <    |	less than, result is true or false,  a %lt; b
-| <=   |	less than or equal, result is true or false,  a <= b
-| \>    |	greater than, result is true or false,  a > b
-| \>=   |	greater than or equal, result is true or false, a >= b
-|  ==   |	equal, result is true or false,  a == b
-| !=  | 	not equal, result is true or false,  a != b
-|  & | bitwise and,  a & b
-| ^ | bitwise exclusive or XOR,  a ^ b
-| \| | bitwise or,  a | b
-|  &&, and | relational and, result is true or false,  a < b && c >= d
-| \|\|, or | relational or, result is true or false,  a < b \|\| c >= d |
-| =  | store or assignment |
-|  += | add and store |
-|  -=  | subtract and store |
-|  *= | multiply and store |
-|  /= | divide and store|
-|  %= | modulo and store|
-| <<= | shift left and store|
-|  \>>= | shift right and store|
-|  &= | bitwise and and store|
-|  ^= | bitwise exclusive or and store|
-|  \|= | bitwise or and store|
-|  , | separator as in   ( y=x,z=++x )|
+# Basic
+name: str = "Alice"
+age: int
 
-### Basic Data Structures
+# Functions
+def greet(name: str) -> str:
+    return f"Hello {name}"
+
+# Optional / Union (modern syntax 3.10+)
+def lookup(key: str) -> str | None: ...     # Use | instead of Optional
+
+# Union simplifications
+x: int | str | float = 42
+
+# TypeVar with bound (Python 3.12+ simplified syntax)
+T = TypeVar("T", bound=float)
+
+# 3.12+ TypeVar syntax
+# type Vector[T: float] = list[T]
+
+# ParamSpec for callbacks
+from typing import ParamSpec, Concatenate
+P = ParamSpec("P")
+
+# Self type (3.11+)
+from typing import Self
+
+class MyClass:
+    @classmethod
+    def create(cls) -> Self: ...
+
+# TypedDict (3.8+)
+from typing import TypedDict
+
+class User(TypedDict):
+    name: str
+    age: int
+
+# Literal types
+from typing import Literal
+
+def set_mode(m: Literal["r", "w", "a"]) -> None: ...
+
+# protocol (structural subtyping)
+from typing import Protocol
+
+class Drawable(Protocol):
+    def draw(self) -> None: ...
+```
+
+## Pattern Matching (`match`/`case` — Python 3.10+)
+
+```python
+# Basic match
+def process(value: object) -> str:
+    match value:
+        case 0:
+            return "zero"
+        case 1 | 2:
+            return "small"
+        case int(n) if n > 100:   # Guard
+            return "large"
+        case str(s):
+            return f"string: {s}"
+        case _:                    # Wildcard (default)
+            return "unknown"
+
+# Matching sequences
+match items:
+    case []:
+        print("empty")
+    case [first]:
+        print(f"single item: {first}")
+    case [first, second]:
+        print(f"two items")
+    case [first, *rest]:
+        print(f"first: {first}, rest: {rest}")
+
+# Matching mappings
+match config:
+    case {"command": str(cmd), "args": list(args)}:
+        run(cmd, *args)
+
+# Matching objects
+match point:
+    case Point(x=0, y=0):
+        print("origin")
+    case Point(x=x, y=y):
+        print(f"({x}, {y})")
+
+# Matching with enum
+from enum import Enum, auto
+
+class Color(Enum):
+    RED = auto()
+    GREEN = auto()
+    BLUE = auto()
+
+match color:
+    case Color.RED:
+        print("red")
+    case _:
+        print("other")
+```
+
+## Walrus Operator (`:=`) — Python 3.8+
+
+```python
+# Assignment expression — assign within expression
+if (n := len(a)) > 10:
+    print(f"Too long: {n}")
+
+# In list comprehensions
+[y := x**2, y * 2 for x in range(10)]
+
+# While loops
+while (chunk := file.read(8192)):
+    process(chunk)
+
+# Regex matches
+if (m := re.search(r"(\w+):(\d+)", line)):
+    print(f"Name: {m[1]}, Value: {m[2]}")
+```
+
+## Data Structures
 
 ### List
 
-- List is a collection which is ordered and changeable. Allows duplicate members.
-
-
-- Lists are created using square brackets:
-
 ```python
-thislist = ["apple", "banana", "cherry"]
+lst = [1, 2, 3]
+lst.append(4)           # Add to end
+lst.extend([5, 6])      # Extend
+lst.insert(0, 0)        # Insert at index
+lst.pop()               # Remove & return last
+lst.pop(0)              # Remove & return at index
+lst.remove(3)           # Remove first match
+lst.sort()              # In-place sort
+lst.reverse()           # In-place reverse
+len(lst)                # Length
+[x * 2 for x in lst]    # List comprehension
+[x for x in lst if x > 2]
 ```
-
-- List items are ordered, changeable, and allow duplicate values.
-
-- List items are indexed, the first item has index `[0]`, the second item has index `[1]` etc.
-
-- The list is changeable, meaning that we can change, add, and remove items in a list after it has been created.
-
-- To determine how many items a list has, use the `len()` function.
-
-- A list can contain different data types:
-```python
-list1 = ["abc", 34, True, 40, "male"]
-```
-- It is also possible to use the list() constructor when creating a new list
-```python
-thislist = list(("apple", "banana", "cherry"))  # note the double round-brackets
-```
-- pop() function removes the last value in the given list by default.
-
-  ```python
-  thislist = ["apple", "banana", "cherry"]
-
-  print(thislist.pop())  # cherry
-  print(thislist.pop(0))  #apple
-
-  ```
-
-
 
 ### Tuple
 
-- Tuple is a collection which is ordered and unchangeable. Allows duplicate members.
-- A tuple is a collection which is ordered and unchangeable.
-- Tuples are written with round brackets.
 ```python
-thistuple = ("apple", "banana", "cherry")
-```
-- Tuple items are ordered, unchangeable, and allow duplicate values.
-- Tuple items are indexed, the first item has index `[0]`, the second item has index `[1]` etc.
-- When we say that tuples are ordered, it means that the items have a defined order, and that order will not change.
-
-- Tuples are unchangeable, meaning that we cannot change, add or remove items after the tuple has been created.
-- Since tuple are indexed, tuples can have items with the same value:
-- Tuples allow duplicate values:
-```python
-thistuple = ("apple", "banana", "cherry", "apple", "cherry")
-```
-- To determine how many items a tuple has, use the  `len()`function:
-```python
-thistuple = ("apple", "banana", "cherry")
-print(len(thistuple))
-```
-- To create a tuple with only one item, you have to add a comma after the item, otherwise Python will not recognize it as a tuple.
-```python
-thistuple = ("apple",)
-print(type(thistuple))
-
-# NOT a tuple
-thistuple = ("apple")
-print(type(thistuple))
-```
-- It is also possible to use the tuple() constructor to make a tuple.
-```python
-
-thistuple = tuple(("apple", "banana", "cherry")) # note the double round-brackets
-print(thistuple)
+t = (1, 2, 3)
+t = 1, 2, 3            # Parens optional
+t = (1,)               # Single-element tuple
+x, y = (1, 2)          # Tuple unpacking
+x, *rest = [1, 2, 3]   # Extended unpacking
 ```
 
 ### Set
-- Set is a collection which is unordered and unindexed. No duplicate members.
-- A set is a collection which is both unordered and unindexed.
-```python
-thisset = {"apple", "banana", "cherry"}
-```
-- Set items are unordered, unchangeable, and do not allow duplicate values.
-- Unordered means that the items in a set do not have a defined order.
-
-- Set items can appear in a different order every time you use them, and cannot be referred to by index or key.
-
-- Sets are unchangeable, meaning that we cannot change the items after the set has been created.
-- Duplicate values will be ignored.
-- To determine how many items a set has, use the `len()` method.
-```python
-thisset = {"apple", "banana", "cherry"}
-
-print(len(thisset))
-```
-- Set items can be of any data type:
-```python
-set1 = {"apple", "banana", "cherry"}
-set2 = {1, 5, 7, 9, 3}
-set3 = {True, False, False}
-set4 = {"abc", 34, True, 40, "male"}
-```
-- It is also possible to use the `set()` constructor to make a set.
-```python
-thisset = set(("apple", "banana", "cherry")) # note the double round-brackets
-```
-- frozenset()  is just an immutable version of Set. While elements of a set can be modified at any time, elements of the frozen set remain the same after creation.
 
 ```python
-set1 = {"apple", "banana", "cherry"}
-frzset=frozenset(set1)
-print(frzset)
+s = {1, 2, 3}
+s.add(4)
+s.remove(3)            # Raises KeyError if missing
+s.discard(3)           # No error if missing
+s.pop()                # Remove & return arbitrary element
+a | b                  # Union
+a & b                  # Intersection
+a - b                  # Difference
+a ^ b                  # Symmetric diff
+{x for x in range(10)} # Set comprehension
+frozenset({1, 2, 3})   # Immutable set
 ```
-
-
 
 ### Dictionary
 
-- Dictionary is a collection which is unordered and changeable. No duplicate members.
-- Dictionaries are used to store data values in key:value pairs.
-- Dictionaries are written with curly brackets, and have keys and values:
 ```python
-thisdict = {
-  "brand": "Ford",
-  "model": "Mustang",
-  "year": 1964
-}
-```
-- Dictionary items are presented in key:value pairs, and can be referred to by using the key name.
-```python
-thisdict = {
-  "brand": "Ford",
-  "model": "Mustang",
-  "year": 1964
-}
-print(thisdict["brand"])
-```
-- Dictionaries are changeable, meaning that we can change, add or remove items after the dictionary has been created.
-- Dictionaries cannot have two items with the same key.
-- Duplicate values will overwrite existing values.
-- To determine how many items a dictionary has, use the `len()` function.
-```python
-print(len(thisdict))
-```
-- The values in dictionary items can be of any data type
-```python
-thisdict = {
-  "brand": "Ford",
-  "electric": False,
-  "year": 1964,
-  "colors": ["red", "white", "blue"]
-}
+d = {"a": 1, "b": 2}
+d["c"] = 3             # Set/update
+d.get("d", 0)          # Safe get with default
+d.setdefault("e", 5)   # Set if missing
+d.pop("a")             # Remove & return
+d.keys() | d.values() | d.items()  # Views
+{k: v for k, v in d.items() if v > 1}
+d1 | d2                # Merge (3.9+)
+d1 |= d2               # In-place merge (3.9+)
 ```
 
-- pop() Function is used to remove a specific value from a dictionary. You can only use key bot the value. Unlike Lists you have to give a value to this function
-
-  ```python
-   car = {
-    "brand": "Ford",
-    "model": "Mustang",
-    "year": 1964
-  }
-
-  x = car.pop("model")
-
-  print(x)# Mustang
-  print(car)#{'brand': 'Ford', 'year': 1964}
-  ```
-
-
-
-### Conditional branching
+## Control Flow
 
 ```python
-    if condition:
-        pass
-    elif condition2:
-        pass
-    else:
-        pass
+# if/elif/else
+if condition:
+    ...
+elif other_condition:
+    ...
+else:
+    ...
+
+# for loops
+for item in iterable:
+    pass
+
+# with enumerate
+for i, item in enumerate(iterable, start=1):
+    print(f"{i}: {item}")
+
+# with zip
+for a, b in zip(list1, list2, strict=True):  # strict=True in 3.10+
+    ...
+
+# while
+while condition:
+    ...
+
+# break/continue/pass — standard
 ```
-### Loops
 
- Python has two primitive loop commands:
-1. while loops
-2. for loops
-
-#### While loop
-- With the `while` loop we can execute a set of statements as long as a condition is true.
-- Example: Print i as long as i is less than 6
-```python
-i = 1
-while i < 6:
-  print(i)
-  i += 1
-```
-- The while loop requires relevant variables to be ready, in this example we need to define an indexing variable, i, which we set to 1.
-- With the `break` statement we can stop the loop even if the while condition is true
-- With the continue statement we can stop the current iteration, and continue with the next.
-
-- With the else statement we can run a block of code once when the condition no longer is true.
-
-#### For loop
-- A for loop is used for iterating over a sequence (that is either a list, a tuple, a dictionary, a set, or a string).
-
-- This is less like the for keyword in other programming languages, and works more like an iterator method as found in other object-orientated programming languages.
-
-- With the for loop we can execute a set of statements, once for each item in a list, tuple, set etc.
-```python
-fruits = ["apple", "banana", "cherry"]
-for x in fruits:
-  print(x)
-```
-- The for loop does not require an indexing variable to set beforehand.
-- To loop through a set of code a specified number of times, we can use the range() function.
-- The range() function returns a sequence of numbers, starting from 0 by default, and increments by 1 (by default), and ends at a specified number.
-- The range() function defaults to increment the sequence by 1, however it is possible to specify the increment value by adding a third parameter: range(2, 30, 3).
-- The else keyword in a for loop specifies a block of code to be executed when the loop is finished.
-A nested loop is a loop inside a loop.
-
-- The "inner loop" will be executed one time for each iteration of the "outer loop":
+## Comprehensions
 
 ```python
-adj = ["red", "big", "tasty"]
-fruits = ["apple", "banana", "cherry"]
+# List
+[x**2 for x in range(10)]
+[x**2 for x in range(10) if x % 2 == 0]
+[expr for x in xs for y in ys]  # Nested
 
-for x in adj:
-  for y in fruits:
-    print(x, y)
+# Dict
+{k: v for k, v in pairs if condition}
+
+# Set
+{x % 3 for x in range(100)}
+
+# Generator (lazy)
+(x**2 for x in range(10_000_000))
+sum(x**2 for x in range(100))  # No extra parens needed
 ```
-- for loops cannot be empty, but if you for some reason have a for loop with no content, put in the pass statement to avoid getting an error.
+
+## Functions
 
 ```python
-for x in [0, 1, 2]:
-  pass
+def func(pos, default=5, *args, key=None, **kwargs):
+    """
+    pos: positional
+    default: optional with default
+    *args: variable positional
+    key: keyword-only (after *)
+    **kwargs: variable keyword
+    """
+    return result
+
+# Lambda
+sq = lambda x: x**2
+
+# Type hints
+def func(x: int, y: str) -> bool:
+    return True
+
+# Decorators
+@decorator
+def func(): ...
+
+# functools
+from functools import wraps, lru_cache, partial, reduce
+
+@lru_cache(maxsize=128)
+def fib(n: int) -> int:
+    return n if n < 2 else fib(n-1) + fib(n-2)
+
+inc = partial(add, 1)   # Partial application
 ```
 
-### Function definition
+## Error Handling
+
 ```python
-def function_name():
-    return
+try:
+    risky()
+except ValueError as e:
+    print(f"ValueError: {e}")
+except (TypeError, RuntimeError):
+    print("Type or Runtime error")
+except Exception:
+    print("Catch-all")  # Avoid bare except:
+else:
+    print("No error occurred")
+finally:
+    cleanup()
+
+# raise / raise from
+raise ValueError("msg")
+raise RuntimeError("wrapped") from ValueError("cause")
+
+# assert
+assert x > 0, f"x must be positive, got {x}"
+
+# Exception groups (3.11+)
+try:
+    raise ExceptionGroup("multiple", [ValueError("a"), TypeError("b")])
+except* ValueError as e:
+    print(f"Got ValueError(s): {e.exceptions}")
 ```
-### Function call
+
+## Context Managers
 
 ```python
-function_name()
+# with statement
+with open("file.txt") as f:
+    data = f.read()
+
+# Multiple
+with open("a.txt") as a, open("b.txt") as b:
+    ...
+
+# Parenthesized (3.10+)
+with (
+    open("a.txt") as a,
+    open("b.txt") as b,
+):
+    ...
+
+# Custom context manager
+from contextlib import contextmanager
+
+@contextmanager
+def managed():
+    print("enter")
+    try:
+        yield
+    finally:
+        print("exit")
+
+# contextlib.suppress, contextlib.redirect_stdout
+from contextlib import suppress
+with suppress(FileNotFoundError):
+    os.remove("maybe.txt")
 ```
 
-* We need not to specify the return type of the function.
-* Functions by default return `None`
-* We can return any datatype.
+## Async / Await (Modern)
+
+```python
+import asyncio
+
+async def fetch(url: str) -> str:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            return await resp.text()
+
+async def main():
+    results = await asyncio.gather(
+        fetch("https://api.example.com/a"),
+        fetch("https://api.example.com/b"),
+    )
+    print(results)
+
+asyncio.run(main())  # Python 3.7+ preferred
+
+# Task groups (3.11+)
+async def main():
+    async with asyncio.TaskGroup() as tg:
+        t1 = tg.create_task(fetch("a"))
+        t2 = tg.create_task(fetch("b"))
+    # All tasks done here, exceptions grouped
+
+# Async iterators & context managers
+class AsyncIterator:
+    def __aiter__(self): return self
+    async def __anext__(self): ...
+
+class AsyncCM:
+    async def __aenter__(self): ...
+    async def __aexit__(self, *e): ...
+```
+
+## ZoneInfo (Python 3.9+) — Modern timezone handling
+
+```python
+from zoneinfo import ZoneInfo  # replaces pytz
+from datetime import datetime, timezone
+
+dt = datetime(2024, 1, 1, tzinfo=ZoneInfo("America/New_York"))
+print(dt.tzname())  # 'EST'
+
+# Convert
+dt_utc = dt.astimezone(timezone.utc)
+dt_paris = dt.astimezone(ZoneInfo("Europe/Paris"))
+```
+
+## Python 3.12+ Features
+
+```python
+# Improved error messages for NameError, ImportError, SyntaxError
+# More helpful tracebacks, suggestions like "Did you mean 'x'?"
+
+# Type parameter syntax (3.12)
+# def max[T](a: T, b: T) -> T: ...
+# class Stack[T]: ...
+
+# Type statement (3.12)
+# type Point = tuple[float, float]
+# type Point[T] = tuple[T, T]
+
+# F-strings improvements (3.12) — can use same quote as outer string
+# f"{x}" — always worked, but f"{'hello'}" works in 3.12
+
+# itertools.batched (3.12)
+from itertools import batched
+for batch in batched(range(10), 3):
+    print(batch)  # (0,1,2) (3,4,5) (6,7,8) (9,)
+
+# pathlib.walk (3.12)
+# for entry in Path(".").walk(): ...
+
+# Better soft keywords and comprehensions
+```
+
+## Standard Library Highlights
+
+```python
+import os, sys, json, re, math, statistics, datetime, pathlib
+from pathlib import Path
+from collections import Counter, defaultdict, deque, namedtuple
+from itertools import chain, count, cycle, groupby, islice, product
+from functools import reduce, partial, lru_cache, wraps
+from dataclasses import dataclass, field
+import sqlite3
+import csv
+import hashlib
+import uuid
+import subprocess
+
+# dataclass (3.7+)
+@dataclass
+class Point:
+    x: float
+    y: float
+    label: str = ""
+    tags: list[str] = field(default_factory=list)
+
+p = Point(1.0, 2.0, "origin")
+
+# pathlib (modern fs)
+Path("data/output.txt").write_text("hello")
+data = Path("file.json").read_text()
+for f in Path("src").glob("**/*.py"):
+    ...
+
+# subprocess (modern)
+result = subprocess.run(["ls", "-la"], capture_output=True, text=True, check=True)
+print(result.stdout)
+
+# TOML support (3.11+)
+import tomllib
+with open("pyproject.toml", "rb") as f:
+    config = tomllib.load(f)
+```
+
+## Common Idioms
+
+```python
+# Swap
+a, b = b, a
+
+# Unpacking
+a, *middle, z = [1, 2, 3, 4, 5]
+
+# Truthiness
+if items:          # Not if len(items) > 0
+if not items:
+
+# Ternary
+x = a if condition else b
+
+# Chained comparisons
+if 0 < x < 10:     # instead of x > 0 and x < 10
+
+# Enumerate
+for i, val in enumerate(lst):
+
+# Zip (parallel iteration)
+for a, b in zip(xs, ys, strict=True):  # strict= requires equal lengths
+
+# dict.get with default
+val = d.get("key", default)
+
+# any/all
+if any(x > 10 for x in lst):
+if all(isinstance(x, int) for x in lst):
+
+# Unpack dicts
+{**d1, **d2}  # or d1 | d2 (3.9+)

@@ -42,6 +42,7 @@ Feel free to take a look. You might learn new things. They have been designed to
 - [PHP](languages/php.php)
 - [Python](languages/python.md)
 - [XML](languages/XML.md)
+- [Rust](languages/rust.md)
 
 #### Functional
 - [JavaScript](languages/javascript.js)
@@ -123,8 +124,12 @@ Feel free to take a look. You might learn new things. They have been designed to
 - [Elasticsearch](tools/elasticsearch.js)
 - [Emmet](tools/emmet.md)
 - [Git](tools/git.sh)
+- [GitHub Actions](tools/github-actions.md)
+- [Hermes Agent](tools/hermes-agent.md)
+- [Next.js](tools/nextjs.md)
 - [Puppeteer](tools/puppeteer.js)
 - [Sublime Text](tools/sublime_text.md)
+- [Terraform / OpenTofu](tools/terraform.md)
 - [VIM](tools/vim.txt)
 - [Visual Studio Code](tools/vscode.md)
 - [Xcode](tools/xcode.txt)
@@ -144,6 +149,47 @@ Feel free to take a look. You might learn new things. They have been designed to
 - [Firebase CLI](tools/firebase_cli.md)
 
 </details>
+
+---
+
+## 🤖 Hermes Agent Integration
+
+This fork includes two powerful additions for [Hermes Agent](https://hermes-agent.nousresearch.com/) users:
+
+### MCP Server
+
+A Python MCP server that exposes all 35+ cheatsheets as tools to Hermes:
+
+```bash
+cd awesome-cheatsheets
+pip install mcp
+hermes mcp add cheatsheets --command "python mcp-server/server.py"
+```
+
+**Tools available:**
+- `list_cheatsheets(category)` — browse by category (languages/backend/frontend/databases/tools)
+- `get_cheatsheet(name)` — full content, fuzzy-matched (e.g., `"python"` → `languages/python.md`)
+- `search_cheatsheets(query, category)` — full-text search across all sheets
+- `suggest_cheatsheet(context)` — finds relevant sheets from a description
+
+Full docs: [mcp-server/README.md](mcp-server/README.md)
+
+### Hermes Skill
+
+Loadable via `/skill awesome-cheatsheets` or `hermes -s awesome-cheatsheets`. Teaches the agent to automatically reference cheatsheets when working with specific technologies. See [SKILL.md](SKILL.md).
+
+---
+
+## 🚀 Fork Additions
+
+Compared to the upstream repo, this fork adds:
+
+| Addition | Files |
+|----------|-------|
+| **New cheatsheets** | Rust, Hermes Agent, Terraform/OpenTofu, GitHub Actions, Next.js |
+| **Modernized cheatsheets** | Python, Node.js, Docker, Git, React (all rewritten with modern syntax and patterns) |
+| **MCP server** | `mcp-server/server.py` — 4 tools for Hermes Agent integration |
+| **Hermes skill** | `SKILL.md` — agent instructions for cheatsheet-aware sessions |
 
 ---
 
